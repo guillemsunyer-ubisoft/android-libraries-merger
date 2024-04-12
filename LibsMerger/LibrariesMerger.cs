@@ -84,7 +84,7 @@ public class LibrariesMerger(string directory1, string directory2)
         foreach (MergeResult mergeResult in mergeResults)
         {
             string mergingVersion = string.IsNullOrEmpty(mergeResult.Merging.Version) ? "?" : mergeResult.Merging.Version;
-            string targetVersion = string.IsNullOrEmpty(mergeResult.Merging.Version) ? "?" : mergeResult.Merging.Version;
+            string targetVersion = string.IsNullOrEmpty(mergeResult.Target.Version) ? "?" : mergeResult.Target.Version;
             
             switch (mergeResult.ResultType)
             {

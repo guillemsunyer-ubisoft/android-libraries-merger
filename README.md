@@ -10,6 +10,7 @@ For example:
 PathToTheExe/LibsMerger.exe D:/User/SDKsUpdate/LibrariesToAdd/ D:/User/SDKsUpdate/LibrariesWhereTheAddedLibrariesWillBeMerged/
 ```
 
+
 ![image](https://github.com/guillemsunyer-ubisoft/android-libraries-merger/assets/166832723/33bce9cd-863f-4f6f-920e-0d8de8501c18)
 
 

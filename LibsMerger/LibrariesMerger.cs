@@ -11,6 +11,7 @@ public class LibrariesMerger(string directory1, string directory2)
 
     public void Run()
     {
+        LogLineJump();
         LogInfo($"WELCOME TO THE LIB MERGER");
         LogLineJump();
         
@@ -143,6 +144,9 @@ public class LibrariesMerger(string directory1, string directory2)
         }
         
         ApplyMerge(mergeResults);
+        
+        LogLineJump();
+        LogInfo("All good, bye :)");
     }
 
     private static bool CheckForDuplicatedLibraryNames(List<Library> libraries, out DuplicatedLibrariesResult? duplicatedLibrariesResult)

@@ -5,6 +5,8 @@ To use, download the release exe, and execute it from the command line with two 
 - The first one is the path to the folder that contains the libraries that need to be added.
 - The second one is the path to the folder that contains the libraries where the libraries from the first path will be merged.
 
+Libraries will be searched in a recursive manner inside the provided paths.
+
 For example:
 ```
 PathToTheExe/LibsMerger.exe D:/User/SDKsUpdate/LibrariesToAdd/ D:/User/SDKsUpdate/LibrariesWhereTheAddedLibrariesWillBeMerged/

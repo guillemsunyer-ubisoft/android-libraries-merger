@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LibsMerger;
 
@@ -31,6 +33,28 @@ public class LibrariesMerger(string directory1, string directory2)
             return;
         }
 
+        LibrariesMergerConfiguration configuration = new();
+        configuration.Load();
+
+        if (!configuration.Loaded)
+        {
+            LogInfo("Configuration not found or with invalid format");
+        }
+        else
+        {
+            StringBuilder stringBuilder = new();
+            stringBuilder.AppendLine("Configuration found:");
+
+            foreach (string toIgnore in configuration.ToIgnore)
+            {
+                stringBuilder.AppendLine($"- Ignoring {toIgnore}");
+            }
+            
+            LogInfo(stringBuilder.ToString());
+        }
+        LogLineJump();
+
+        
         LogInfo($"Resolving from directory {directory1} to {directory2}");
         LogLineJump();
 
@@ -80,15 +104,22 @@ public class LibrariesMerger(string directory1, string directory2)
             return;
         }
 
-        List<MergeResult> mergeResults = MergeLibraries(libraries1, libraries2);
+        List<MergeResult> mergeResults = MergeLibraries(configuration, libraries1, libraries2);
 
-        foreach (MergeResult mergeResult in mergeResults)
+        IOrderedEnumerable<MergeResult> orderedMergeResults = mergeResults.OrderBy(o => o.ResultType);
+
+        foreach (MergeResult mergeResult in orderedMergeResults)
         {
             string mergingVersion = string.IsNullOrEmpty(mergeResult.Merging.Version) ? "?" : mergeResult.Merging.Version;
             string targetVersion = string.IsNullOrEmpty(mergeResult.Target.Version) ? "?" : mergeResult.Target.Version;
             
             switch (mergeResult.ResultType)
             {
+                case MergeResultType.Ignoring:
+                {
+                    LogInfo($"[{mergeResult.ResultType}] {mergeResult.Merging.Name}");
+                    break;
+                }
                 case MergeResultType.Increased:
                 {
                     LogInfo($"[{mergeResult.ResultType}] {mergeResult.Merging.Name}: {mergingVersion} > {targetVersion}");
@@ -214,12 +245,20 @@ public class LibrariesMerger(string directory1, string directory2)
         }
     }
 
-    private List<MergeResult> MergeLibraries(IReadOnlyList<Library> libraries1, IReadOnlyList<Library> libraries2)
+    private List<MergeResult> MergeLibraries(LibrariesMergerConfiguration configuration, IReadOnlyList<Library> libraries1, IReadOnlyList<Library> libraries2)
     {
         List<MergeResult> ret = new();
         
         foreach (Library merging in libraries1)
         {
+            bool shouldIgnore = configuration.ToIgnore.Contains(merging.Name);
+
+            if (shouldIgnore)
+            {
+                ret.Add(new MergeResult(merging, merging, MergeResultType.Ignoring));
+                continue;
+            }
+            
             MergeResult mergeResult = MergeLibrary(merging, libraries2);
 
             ret.Add(mergeResult);
@@ -353,24 +392,21 @@ public class LibrariesMerger(string directory1, string directory2)
             }
         }
         
-        string name = GetLibraryName(fileNameWithoutExtension);
+        string name = GetLibraryName(filepath);
 
         return new Library(filepath, name, version, parsedVersion);
     }
 
     string GetLibraryName(string fileNameWithoutExtension)
     {
-        char delimiter = '-';
-        int index = fileNameWithoutExtension.LastIndexOf(delimiter);
+        Match match = Regex.Match(fileNameWithoutExtension, @"([^\\\/]+?)(?:-\d+(\.\d+)*(-[^\\\/]+)?)?\.(jar|aar)$");
 
-        bool found = index != -1;
-
-        if (!found)
+        if (!match.Success || match.Groups.Count < 1)
         {
             return fileNameWithoutExtension;
         }
         
-        return fileNameWithoutExtension.Substring(0, index);
+        return match.Groups[1].Value;
     }
 
     List<Library> ProcessLibraries(IReadOnlyList<string> libraries)
